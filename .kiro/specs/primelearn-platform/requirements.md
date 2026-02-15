@@ -300,6 +300,21 @@ PrimeLearn is an AI-powered adaptive learning platform for technology education 
 10. THE Platform SHALL load initial page content within 2 seconds on 3G connections
 11. THE Platform SHALL implement progressive web app features for offline capability
 
+## Algorithm Reference
+
+| Algorithm | Feature | Purpose | Complexity |
+|-----------|---------|---------|------------|
+| **Topological Sort (Kahn's)** | F1 | Valid learning order from prerequisite DAG | O(V+E) |
+| **Bayesian Knowledge Tracing** | F1, F2, F4, F5 | Per-concept mastery probability tracking | O(1) per update |
+| **Item Response Theory (1PL)** | F1, F5 | Adaptive initial assessment placement & finale | O(n) for n questions |
+| **Rule-Based Decision Tree** | F3 | Classify learner state from behavioral signals | O(1) |
+| **Vygotsky ZPD Threshold** | F3 | Keep learner in 30-70% productive struggle zone | O(1) |
+| **Progressive Hint Cascade** | F3 | 4-level escalating Socratic intervention | O(1) |
+| **BFS (Breadth-First Search)** | F4 | Find all downstream concepts affected by a gap | O(V+E) |
+| **Leitner Spaced Repetition** | F6 | Schedule optimal review timing for decay prevention | O(1) per concept |
+| **Format Selection Rules** | F2 | Choose optimal episode format for concept + learner | O(1) |
+| **RAG (Retrieval Augmented Generation)** | F3, F7 | Ground AI responses in verified content | O(KB size) |
+
 ## Technical Constraints and Assumptions
 
 ### Constraints

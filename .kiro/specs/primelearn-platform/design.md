@@ -569,7 +569,7 @@ interface AssessmentResult {
 **DynamoDB Schema Design**:
 
 ```typescript
-// Users Table
+// Users (LearnerState) Table
 interface UserRecord {
   PK: string;  // USER#{userId}
   SK: string;  // PROFILE
@@ -577,25 +577,69 @@ interface UserRecord {
   passwordHash: string;
   name: string;
   university?: string;
+  goal: string;
+  currentLevel: 'beginner' | 'intermediate' | 'advanced';
+  learningStyle: {
+    visual: number;    // 0.0 - 1.0
+    handsOn: number;   // 0.0 - 1.0
+    theory: number;    // 0.0 - 1.0
+    example: number;   // 0.0 - 1.0
+  };
   preferences: {
     language: 'english' | 'hinglish';
     darkMode: boolean;
   };
+  placementTarget: 'service' | 'product' | 'startup';
+  streakDays: number;
   createdAt: string;
   lastLogin: string;
 }
 
-// Progress Table
-interface ProgressRecord {
+// Knowledge Graph Table
+interface KnowledgeGraphRecord {
+  PK: string;  // CONCEPT#{conceptId}
+  SK: string;  // METADATA
+  name: string;
+  seasonId: string;
+  type: 'implementation' | 'theoretical' | 'visual' | 'architectural' | 'applied';
+  requiresHandsOn: boolean;
+  bestModality: 'code' | 'visual' | 'textual' | 'interactive';
+  complexityLevel: 'beginner' | 'intermediate' | 'advanced';
+  prerequisites: string[];  // List of concept IDs
+  dependents: string[];     // List of concept IDs
+  industryWeight: {
+    service: number;
+    product: number;
+    startup: number;
+  };
+  metadata: Record<string, any>;
+}
+
+// Learner Mastery Table
+interface MasteryRecord {
   PK: string;  // USER#{userId}
-  SK: string;  // SEASON#{seasonId}
-  completedNodes: string[];
-  currentNode: string;
-  masteryState: Record<string, number>;  // nodeId -> probability
-  totalTimeSpent: number;
-  lastAccessed: string;
-  GSI1PK: string;  // SEASON#{seasonId}
-  GSI1SK: string;  // USER#{userId}
+  SK: string;  // CONCEPT#{conceptId}
+  bktScore: number;  // 0.0 - 1.0
+  bktParams: {
+    pInit: number;
+    pTransit: number;
+    pSlip: number;
+    pGuess: number;
+  };
+  status: 'not_started' | 'in_progress' | 'mastered' | 'decaying';
+  interactionsCount: number;
+  lastInteraction: string;
+  gateResults: boolean[];
+}
+
+// Leitner Box Table
+interface LeitnerRecord {
+  PK: string;  // USER#{userId}
+  SK: string;  // LEITNER#{conceptId}
+  box: number; // 1-5
+  lastReviewed: string;
+  nextReviewDue: string;
+  reviewHistory: Array<{ date: string; correct: boolean }>;
 }
 
 // Seasons Table
@@ -604,9 +648,10 @@ interface SeasonRecord {
   SK: string;  // METADATA
   title: string;
   description: string;
-  skillGraph: SkillNode[];
+  topicType: string;
   totalEpisodes: number;
   estimatedHours: number;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
   prerequisites: string[];
   targetAudience: string[];
   createdAt: string;
@@ -617,14 +662,14 @@ interface EpisodeRecord {
   PK: string;  // EPISODE#{episodeId}
   SK: string;  // METADATA
   seasonId: string;
-  nodeId: string;
+  conceptId: string;
   title: string;
   format: EpisodeFormat;
-  contentS3Key: string;  // Reference to S3
+  contentS3Key: string;
   duration: number;
   learningObjectives: string[];
   GSI1PK: string;  // SEASON#{seasonId}
-  GSI1SK: string;  // NODE#{nodeId}
+  GSI1SK: string;  // EPISODE#{episodeNumber}
 }
 
 // Assessments Table
@@ -633,23 +678,34 @@ interface AssessmentRecord {
   SK: string;  // METADATA
   userId: string;
   seasonId: string;
-  questions: Question[];
-  answers?: Answer[];
-  result?: AssessmentResult;
+  type: 'BUILD_PROJECT' | 'DESIGN_CHALLENGE' | 'EXPLAIN_CHALLENGE' | 'MIXED';
+  weakConceptsTargeted: string[];
+  submissionS3Key?: string;
+  aiFeedback?: string;
+  score?: number;
   status: 'in_progress' | 'completed';
   createdAt: string;
   completedAt?: string;
-  GSI1PK: string;  // USER#{userId}
-  GSI1SK: string;  // ASSESSMENT#{createdAt}
+  isPortfolioPiece: boolean;
 }
 
-// Analytics Table
-interface AnalyticsRecord {
-  PK: string;  // ANALYTICS#{date}
-  SK: string;  // METRIC#{metricName}
-  value: number;
-  metadata: Record<string, any>;
-  timestamp: string;
+// Session Logs / Analytics
+interface SessionLogRecord {
+  PK: string;  // USER#{userId}
+  SK: string;  // SESSION#{timestamp}
+  episodeId: string;
+  format: EpisodeFormat;
+  durationMin: number;
+  struggleSignals: {
+    avgErrorRate: number;
+    maxIdleTime: number;
+    undoCount: number;
+    docSwitches: number;
+    hintLevelsTriggered: number[];
+  };
+  struggleScoreAvg: number;
+  gateResults: boolean[];
+  completed: boolean;
 }
 ```
 
